@@ -1,0 +1,14 @@
+{% extends "base.html" %} {% block title %}{{ vendor.name }}{% endblock %} {% block content %}
+<h1>{{ vendor.name }}</h1>
+<p class="status">Status: <strong>{{ vendor.status.value }}</strong></p>
+<h2>Operating note</h2>
+<p class="operating-note">{{ vendor.operating_note }}</p>
+<h2>Capability statement</h2>
+{# Sanitized rich text — marking the sanitizer's output safe is the secure pattern. #}
+<div class="capability">{{ vendor.capability_statement_html | safe }}</div>
+{% if current_user and current_user.role == 'reviewer' and vendor.status.value == 'pending' %}
+<button class="approve" data-vendor="{{ vendor.id }}">Approve</button>
+{% endif %}
+{% endblock %} {% block scripts %}
+<script src="/static/approve.js" nonce="{{ nonce }}"></script>
+{% endblock %}

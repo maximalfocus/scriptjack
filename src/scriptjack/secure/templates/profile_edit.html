@@ -1,0 +1,18 @@
+{% extends "base.html" %} {% block title %}My vendor profile{% endblock %} {% block content %}
+<h1>My vendor profile — {{ vendor.name }}</h1>
+<p>
+  The operating note is plain text. The capability statement accepts a little rich text (bold,
+  emphasis, links); everything else is removed by the allowlist sanitizer.
+</p>
+<form method="post" action="/profile" class="stack">
+  <label>
+    Operating note
+    <textarea name="operating_note" rows="2">{{ vendor.operating_note }}</textarea>
+  </label>
+  <label>
+    Capability statement (rich text)
+    <textarea name="capability_statement" rows="4">{{ vendor.capability_statement_html }}</textarea>
+  </label>
+  <button type="submit">Save profile</button>
+</form>
+{% endblock %}

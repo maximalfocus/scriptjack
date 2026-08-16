@@ -1,0 +1,29 @@
+{% extends "base.html" %} {% block title %}Vendor search{% endblock %} {% block content %}
+<h1>Vendor search</h1>
+<form method="get" action="/search" class="inline">
+  <input name="q" value="{{ q }}" placeholder="Vendor name" />
+  <button type="submit">Search</button>
+</form>
+{# The reflected parameter is emitted as TEXT (autoescaped), never as markup. #}
+<p>Results for: <span class="echo">{{ q }}</span></p>
+<table>
+  <thead>
+    <tr>
+      <th>Vendor</th>
+      <th>Status</th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for v in results %}
+    <tr>
+      <td><a href="/vendors/{{ v.id }}">{{ v.name }}</a></td>
+      <td>{{ v.status.value }}</td>
+    </tr>
+    {% else %}
+    <tr>
+      <td colspan="2">No vendors match.</td>
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>
+{% endblock %}
