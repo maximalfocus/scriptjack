@@ -1,0 +1,13 @@
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+
+# Tooling caches
+.mypy_cache/
+.pytest_cache/
+.ruff_cache/
+
+# OS noise
+.DS_Store

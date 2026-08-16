@@ -1,0 +1,42 @@
+# Docker Compose is the only supported host workflow. The host needs Docker only:
+# no Python, no browser, and no installed project packages.
+#
+#   docker compose up secure-app          # run the secure portal on 127.0.0.1:8000
+#   docker compose run --rm verify        # Ruff + mypy + pytest in one container
+#
+# The secure application is the default long-running service. Every other service
+# (verification now; the vulnerable app, collector, and browser harness later) is
+# opt-in behind a profile, so `docker compose up` never starts anything unsafe.
+
+services:
+  secure-app:
+    build:
+      context: .
+      target: runtime
+    image: scriptjack-secure:local
+    # Loopback only — no service port is ever published beyond 127.0.0.1.
+    ports:
+      - "127.0.0.1:8000:8000"
+    healthcheck:
+      test:
+        - CMD
+        - python
+        - -c
+        - "import urllib.request,sys; sys.exit(0 if urllib.request.urlopen('http://127.0.0.1:8000/healthz').status==200 else 1)"
+      interval: 5s
+      timeout: 3s
+      retries: 12
+      start_period: 5s
+    restart: "no"
+
+  verify:
+    build:
+      context: .
+      target: dev
+    image: scriptjack-verify:local
+    profiles: ["verify"]
+    # The one documented verification boundary, shared verbatim by CI.
+    command:
+      - sh
+      - -c
+      - "ruff check . && ruff format --check . && mypy && pytest"

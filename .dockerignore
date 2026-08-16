@@ -1,0 +1,14 @@
+.git
+.github
+.gitignore
+.dockerignore
+.venv
+venv
+__pycache__
+*.pyc
+.mypy_cache
+.pytest_cache
+.ruff_cache
+.DS_Store
+docker-compose.yml
+Dockerfile
