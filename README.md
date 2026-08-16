@@ -37,20 +37,26 @@ same boundary used by CI:
 docker compose run --rm verify
 ```
 
-## Run the browser harness (the secure demo)
+## Run the browser harness (the secure ↔ vulnerable demo)
 
-A headless-Chromium (Playwright) service on the demo network drives a **real
-browser** against the secure app and proves that none of the checked-in payload
-fixtures execute at any of the three surfaces, while the reviewer's legitimate work
-still succeeds. For a fresh, deterministic run:
+A headless-Chromium (Playwright) service, attached **only** to a hermetic
+egress-less network, drives a **real browser** against both apps: it proves the
+checked-in payload fixtures **execute** at the vulnerable app's stored sink and
+**do not** execute against the secure app, while the reviewer's legitimate work
+still succeeds. The vulnerable app is intentionally insecure and opt-in.
+
+For a fresh, deterministic run:
 
 ```sh
 docker compose down -v
-docker compose run --build --rm harness
+ALLOW_VULNERABLE_DEMO=true \
+  docker compose --profile harness --profile vulnerable \
+  run --build --rm harness
 ```
 
-This brings up a fresh secure app, runs the browser scenarios, reports the result,
-and completes in well under five minutes once images are built.
+The vulnerable app **will not start** without both enabling its `vulnerable`
+profile and setting `ALLOW_VULNERABLE_DEMO=true`. Nothing unsafe starts with a
+plain `docker compose up`.
 
 ## Scope and safety
 

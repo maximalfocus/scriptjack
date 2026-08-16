@@ -1,12 +1,15 @@
 # Docker Compose is the only supported host workflow. The host needs Docker only:
 # no Python, no browser, and no installed project packages.
 #
-#   docker compose up secure-app          # run the secure portal on 127.0.0.1:8000
-#   docker compose run --rm verify        # Ruff + mypy + pytest in one container
+#   docker compose up secure-app                        # secure portal, 127.0.0.1:8000
+#   docker compose run --rm verify                      # Ruff + mypy + pytest (unit)
+#   ALLOW_VULNERABLE_DEMO=true \
+#     docker compose --profile harness --profile vulnerable \
+#     run --build --rm harness                          # full browser demo (secure + vulnerable)
 #
-# The secure application is the default long-running service. Every other service
-# (verification now; the vulnerable app, collector, and browser harness later) is
-# opt-in behind a profile, so `docker compose up` never starts anything unsafe.
+# The secure application is the only default service. The vulnerable app, the
+# browser harness (and, later, the collector) are opt-in behind profiles, so
+# `docker compose up` never starts anything unsafe.
 
 services:
   secure-app:
@@ -14,9 +17,43 @@ services:
       context: .
       target: runtime
     image: scriptjack-secure:local
-    # Loopback only — no service port is ever published beyond 127.0.0.1.
+    networks: [demo, hostpub]
     ports:
-      - "127.0.0.1:8000:8000"
+      - "127.0.0.1:8000:8000" # loopback only
+    healthcheck:
+      test:
+        - CMD
+        - python
+        - -c
+        - "import urllib.request,sys; sys.exit(0 if urllib.request.urlopen('http://127.0.0.1:8000/healthz').status==200 else 1)"
+      interval: 5s
+      timeout: 3s
+      retries: 12
+      start_period: 5s
+    restart: "no"
+
+  # Intentionally vulnerable app. Opt-in only: it is behind the `vulnerable`
+  # profile AND refuses to start unless ALLOW_VULNERABLE_DEMO=true is supplied
+  # from the environment. Hardened per FR-018.
+  vulnerable-app:
+    build:
+      context: .
+      target: runtime
+    image: scriptjack-secure:local
+    profiles: ["vulnerable"]
+    command:
+      ["uvicorn", "scriptjack.vulnerable.app:app", "--host", "0.0.0.0", "--port", "8000"]
+    environment:
+      ALLOW_VULNERABLE_DEMO: "${ALLOW_VULNERABLE_DEMO:-}"
+    networks: [demo, hostpub]
+    ports:
+      - "127.0.0.1:8001:8000" # loopback only
+    read_only: true
+    tmpfs:
+      - /tmp
+    cap_drop: ["ALL"]
+    security_opt:
+      - "no-new-privileges:true"
     healthcheck:
       test:
         - CMD
@@ -35,16 +72,15 @@ services:
       target: dev
     image: scriptjack-verify:local
     profiles: ["verify"]
-    # The one documented verification boundary, shared verbatim by CI.
+    # The one documented unit verification boundary, shared verbatim by CI.
     command:
       - sh
       - -c
       - "ruff check . && ruff format --check . && mypy && pytest"
 
-  # Headless-Chromium (Playwright) verification harness, its own service on the
-  # demo network. It drives a real browser against the secure app to prove that
-  # no script executes. Full FR-018 hardening + the egress-less network arrive
-  # with the vulnerable app in SLICE-002.
+  # Headless-Chromium (Playwright) harness. It is attached ONLY to the hermetic,
+  # egress-less `demo` network, so the context in which injected script runs
+  # cannot reach any external host — only the demo's own services.
   harness:
     build:
       context: .
@@ -54,8 +90,21 @@ services:
     depends_on:
       secure-app:
         condition: service_healthy
+      vulnerable-app:
+        condition: service_healthy
     environment:
       SCRIPTJACK_BASE_URL: "http://secure-app:8000"
+      SCRIPTJACK_VULN_BASE_URL: "http://vulnerable-app:8000"
+    networks: [demo]
     security_opt:
       - "no-new-privileges:true"
     command: ["pytest", "browser_tests"]
+
+networks:
+  # Hermetic, egress-less network for the attack path (harness <-> apps).
+  demo:
+    internal: true
+  # A loopback-publish network so the app ports are reachable from the host for
+  # manual exploration; the harness is deliberately not attached to it.
+  hostpub:
+    driver: bridge
