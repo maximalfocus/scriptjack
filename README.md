@@ -43,7 +43,11 @@ A headless-Chromium (Playwright) service, attached **only** to a hermetic
 egress-less network, drives a **real browser** against both apps: it proves the
 checked-in payload fixtures **execute** at the vulnerable app's stored sink and
 **do not** execute against the secure app, while the reviewer's legitimate work
-still succeeds. The vulnerable app is intentionally insecure and opt-in.
+still succeeds. It also drives the full contained takeover chain — the stored
+payload reads the page-embedded token, approves the attacker's vendor **as the
+reviewer**, and beacons the token to an in-network **collector** — and shows the
+secure app resisting the identical payload. The vulnerable app and collector are
+intentionally insecure and opt-in.
 
 For a fresh, deterministic run:
 
