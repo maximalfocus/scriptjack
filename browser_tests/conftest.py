@@ -75,9 +75,10 @@ class Portal:
         self.page.wait_for_load_state("networkidle")  # type: ignore[attr-defined]
         return response
 
-    def open_filtered(self, fragment: str) -> None:
-        self.page.goto("/filtered#" + quote(fragment))  # type: ignore[attr-defined]
+    def open_filtered(self, fragment: str) -> Response:
+        response = self.page.goto("/filtered#" + quote(fragment))  # type: ignore[attr-defined]
         self.page.wait_for_load_state("networkidle")  # type: ignore[attr-defined]
+        return response  # type: ignore[no-any-return]
 
     def goto(self, path: str) -> Response:
         return self.page.goto(path)  # type: ignore[attr-defined,no-any-return]
@@ -93,6 +94,9 @@ class Portal:
 
     def inner_text(self, selector: str) -> str:
         return str(self.page.inner_text(selector))  # type: ignore[attr-defined]
+
+    def inner_html(self, selector: str) -> str:
+        return str(self.page.inner_html(selector))  # type: ignore[attr-defined]
 
     def api_token(self) -> str:
         content = self.page.get_attribute(  # type: ignore[attr-defined]
