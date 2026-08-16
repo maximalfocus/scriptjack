@@ -1,0 +1,17 @@
+name: CI
+
+# The exact same Docker Compose verification boundary used locally
+# (`docker compose run --rm verify`) is the only gate here, so local and CI
+# results cannot drift.
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Ruff + mypy + pytest via Docker Compose
+        run: docker compose run --rm verify
