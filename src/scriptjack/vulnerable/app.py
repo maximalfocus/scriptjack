@@ -33,6 +33,7 @@ _HERE = Path(__file__).resolve().parent
 # Vulnerable overrides first, then the shared secure templates/static as fallback.
 _TEMPLATES = Jinja2Templates(directory=[str(_HERE / "templates"), str(_SECURE_ROOT / "templates")])
 _STATIC_DIR = _SECURE_ROOT / "static"
+_VULN_STATIC_DIR = _HERE / "static"
 
 _UNAUTHORIZED = HTTPException(status_code=401, detail="Unauthorized")
 
@@ -63,6 +64,9 @@ def create_app(settings: Settings | None = None, store: VendorStore | None = Non
     )
     # No SecurityContextMiddleware: this app serves no CSP on purpose.
     app.mount("/static", StaticFiles(directory=str(_STATIC_DIR)), name="static")
+    # The vulnerable DOM-sink script (innerHTML) lives in the vulnerable app's own
+    # static path so the unsafe contrast is readable in served source.
+    app.mount("/vuln-static", StaticFiles(directory=str(_VULN_STATIC_DIR)), name="vuln-static")
 
     def user_of(request: Request) -> DemoUser | None:
         return sessions.read_session(request, resolved)
