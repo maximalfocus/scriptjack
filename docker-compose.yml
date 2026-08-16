@@ -40,3 +40,22 @@ services:
       - sh
       - -c
       - "ruff check . && ruff format --check . && mypy && pytest"
+
+  # Headless-Chromium (Playwright) verification harness, its own service on the
+  # demo network. It drives a real browser against the secure app to prove that
+  # no script executes. Full FR-018 hardening + the egress-less network arrive
+  # with the vulnerable app in SLICE-002.
+  harness:
+    build:
+      context: .
+      target: harness
+    image: scriptjack-harness:local
+    profiles: ["harness"]
+    depends_on:
+      secure-app:
+        condition: service_healthy
+    environment:
+      SCRIPTJACK_BASE_URL: "http://secure-app:8000"
+    security_opt:
+      - "no-new-privileges:true"
+    command: ["pytest", "browser_tests"]

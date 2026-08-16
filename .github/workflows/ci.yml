@@ -14,4 +14,6 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - name: Ruff + mypy + pytest via Docker Compose
-        run: docker compose run --rm verify
+        run: docker compose run --build --rm verify
+      - name: Browser harness (headless Chromium) via Docker Compose
+        run: docker compose run --build --rm harness

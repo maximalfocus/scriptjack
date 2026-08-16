@@ -37,3 +37,16 @@ COPY src ./src
 COPY tests ./tests
 RUN uv sync --frozen
 CMD ["pytest"]
+
+# ---- harness image: headless Chromium (Playwright) for browser-driven tests ----
+FROM base AS harness
+ENV PLAYWRIGHT_BROWSERS_PATH=/ms-playwright
+COPY pyproject.toml uv.lock ./
+RUN uv sync --frozen --no-install-project --group browser
+# Download Chromium and its OS dependencies into a fixed, user-independent path.
+RUN playwright install --with-deps chromium
+COPY README.md ./
+COPY src ./src
+COPY browser_tests ./browser_tests
+RUN uv sync --frozen --group browser
+CMD ["pytest", "browser_tests"]

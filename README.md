@@ -37,6 +37,21 @@ same boundary used by CI:
 docker compose run --rm verify
 ```
 
+## Run the browser harness (the secure demo)
+
+A headless-Chromium (Playwright) service on the demo network drives a **real
+browser** against the secure app and proves that none of the checked-in payload
+fixtures execute at any of the three surfaces, while the reviewer's legitimate work
+still succeeds. For a fresh, deterministic run:
+
+```sh
+docker compose down -v
+docker compose run --build --rm harness
+```
+
+This brings up a fresh secure app, runs the browser scenarios, reports the result,
+and completes in well under five minutes once images are built.
+
 ## Scope and safety
 
 - All users, credentials, and data are conspicuously fictional demo values.
