@@ -1,0 +1,75 @@
+:root {
+  font-family: system-ui, sans-serif;
+  line-height: 1.5;
+  color: #1a1a1a;
+  background: #f7f7f8;
+}
+body {
+  margin: 0;
+  padding: 0 1rem 2rem;
+}
+header {
+  border-bottom: 1px solid #ddd;
+  padding: 0.75rem 0;
+  margin-bottom: 1rem;
+}
+.brand {
+  font-weight: 600;
+}
+.tag {
+  font-size: 0.75rem;
+  background: #e6f4ea;
+  color: #1b5e20;
+  border-radius: 4px;
+  padding: 0.1rem 0.4rem;
+}
+.role {
+  color: #666;
+}
+nav a {
+  margin-right: 0.75rem;
+}
+main {
+  max-width: 60rem;
+}
+table {
+  border-collapse: collapse;
+  width: 100%;
+}
+th,
+td {
+  border: 1px solid #ddd;
+  padding: 0.4rem 0.6rem;
+  text-align: left;
+  vertical-align: top;
+}
+.stack {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  max-width: 32rem;
+}
+.inline {
+  display: inline;
+}
+textarea,
+input {
+  width: 100%;
+  font: inherit;
+  padding: 0.3rem;
+}
+button {
+  font: inherit;
+  padding: 0.3rem 0.7rem;
+  cursor: pointer;
+}
+.error {
+  color: #b00020;
+}
+.echo {
+  font-weight: 600;
+}
+.hint {
+  color: #555;
+  font-size: 0.9rem;
+}

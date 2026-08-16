@@ -1,0 +1,33 @@
+{% extends "base.html" %} {% block title %}Review queue{% endblock %} {% block content %}
+<h1>Review queue</h1>
+<p>Review vendor submissions and approve legitimate vendors.</p>
+<table>
+  <thead>
+    <tr>
+      <th>Vendor</th>
+      <th>Operating note</th>
+      <th>Capability statement</th>
+      <th>Status</th>
+      <th></th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for v in vendors %}
+    <tr data-vendor="{{ v.id }}">
+      <td><a href="/vendors/{{ v.id }}">{{ v.name }}</a></td>
+      <td>{{ v.operating_note }}</td>
+      {# capability_statement_html is sanitizer output; marking sanitized HTML safe is the fix. #}
+      <td class="capability">{{ v.capability_statement_html | safe }}</td>
+      <td class="status">{{ v.status.value }}</td>
+      <td>
+        {% if v.status.value == 'pending' %}
+        <button class="approve" data-vendor="{{ v.id }}">Approve</button>
+        {% endif %}
+      </td>
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>
+{% endblock %} {% block scripts %}
+<script src="/static/approve.js" nonce="{{ nonce }}"></script>
+{% endblock %}

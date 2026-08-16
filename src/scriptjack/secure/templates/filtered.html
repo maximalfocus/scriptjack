@@ -1,0 +1,28 @@
+{% extends "base.html" %} {% block title %}Filtered view{% endblock %} {% block content %}
+<h1>Shareable filtered view</h1>
+<p>
+  Active filter: <span id="active-filter">(all)</span>
+</p>
+<p class="hint">
+  Append <code>#status=pending</code> or <code>#status=approved</code> to the URL to filter the
+  list; the link is shareable. The filter label is client-rendered from the URL fragment.
+</p>
+<table id="vendor-table">
+  <thead>
+    <tr>
+      <th>Vendor</th>
+      <th>Status</th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for v in vendors %}
+    <tr>
+      <td>{{ v.name }}</td>
+      <td>{{ v.status.value }}</td>
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>
+{% endblock %} {% block scripts %}
+<script src="/static/filtered.js" nonce="{{ nonce }}"></script>
+{% endblock %}
