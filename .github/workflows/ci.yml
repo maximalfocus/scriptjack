@@ -15,5 +15,9 @@ jobs:
       - uses: actions/checkout@v4
       - name: Ruff + mypy + pytest via Docker Compose
         run: docker compose run --build --rm verify
-      - name: Browser harness (headless Chromium) via Docker Compose
-        run: docker compose run --build --rm harness
+      - name: Browser harness (headless Chromium) — secure + vulnerable contrast
+        env:
+          ALLOW_VULNERABLE_DEMO: "true"
+        run: >-
+          docker compose --profile harness --profile vulnerable
+          run --build --rm harness

@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{% block title %}{{ org.name }}{% endblock %}</title>
+    {% if api_token %}<meta name="scriptjack-api-token" content="{{ api_token }}" />{% endif %}
+    <link rel="stylesheet" href="/static/app.css" />
+  </head>
+  <body>
+    <header>
+      <div class="brand">
+        {{ org.name }} — vendor onboarding <span class="tag danger">VULNERABLE demo</span>
+      </div>
+      {% if current_user %}
+      <div class="who">
+        {{ current_user.display_name }} <span class="role">({{ current_user.role }})</span>
+        <form method="post" action="/logout" class="inline">
+          <button type="submit">Log out</button>
+        </form>
+      </div>
+      <nav>
+        {% if current_user.role == 'reviewer' %}
+        <a href="/queue">Queue</a>
+        <a href="/search">Search</a>
+        <a href="/filtered">Filtered view</a>
+        {% else %}
+        <a href="/profile">My profile</a>
+        {% endif %}
+      </nav>
+      {% endif %}
+    </header>
+    <main>{% block content %}{% endblock %}</main>
+    {% block scripts %}{% endblock %}
+  </body>
+</html>

@@ -19,6 +19,7 @@ from playwright.sync_api import Browser, Playwright, Response, sync_playwright
 from scriptjack.common.payloads import SENTINEL_GLOBAL
 
 BASE_URL = os.environ.get("SCRIPTJACK_BASE_URL", "http://secure-app:8000")
+VULN_BASE_URL = os.environ.get("SCRIPTJACK_VULN_BASE_URL", "http://vulnerable-app:8000")
 
 REVIEWER = ("reviewer@scriptjack.invalid", "demo-reviewer-password-not-secret")
 VENDOR = ("vendor@scriptjack.invalid", "demo-vendor-password-not-secret")
@@ -99,9 +100,8 @@ def browser(_playwright: Playwright) -> Iterator[Browser]:
     launched.close()
 
 
-@pytest.fixture
-def portal(browser: Browser) -> Iterator[Portal]:
-    context = browser.new_context(base_url=BASE_URL)
+def _make_portal(browser: Browser, base_url: str) -> Iterator[Portal]:
+    context = browser.new_context(base_url=base_url)
     page = context.new_page()
     dialogs: list[str] = []
 
@@ -112,3 +112,13 @@ def portal(browser: Browser) -> Iterator[Portal]:
     page.on("dialog", _on_dialog)
     yield Portal(page, dialogs)
     context.close()
+
+
+@pytest.fixture
+def portal(browser: Browser) -> Iterator[Portal]:
+    yield from _make_portal(browser, BASE_URL)
+
+
+@pytest.fixture
+def vuln_portal(browser: Browser) -> Iterator[Portal]:
+    yield from _make_portal(browser, VULN_BASE_URL)
