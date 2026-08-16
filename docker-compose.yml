@@ -66,6 +66,37 @@ services:
       start_period: 5s
     restart: "no"
 
+  # The attacker's in-network drop point. Opt-in with the vulnerable app, on the
+  # egress-less network, hardened, and published on loopback 8002 only.
+  collector:
+    build:
+      context: .
+      target: runtime
+    image: scriptjack-secure:local
+    profiles: ["vulnerable"]
+    command:
+      ["uvicorn", "scriptjack.collector.app:app", "--host", "0.0.0.0", "--port", "8000"]
+    networks: [demo, hostpub]
+    ports:
+      - "127.0.0.1:8002:8000" # loopback only
+    read_only: true
+    tmpfs:
+      - /tmp
+    cap_drop: ["ALL"]
+    security_opt:
+      - "no-new-privileges:true"
+    healthcheck:
+      test:
+        - CMD
+        - python
+        - -c
+        - "import urllib.request,sys; sys.exit(0 if urllib.request.urlopen('http://127.0.0.1:8000/healthz').status==200 else 1)"
+      interval: 5s
+      timeout: 3s
+      retries: 12
+      start_period: 5s
+    restart: "no"
+
   verify:
     build:
       context: .
@@ -92,9 +123,12 @@ services:
         condition: service_healthy
       vulnerable-app:
         condition: service_healthy
+      collector:
+        condition: service_healthy
     environment:
       SCRIPTJACK_BASE_URL: "http://secure-app:8000"
       SCRIPTJACK_VULN_BASE_URL: "http://vulnerable-app:8000"
+      SCRIPTJACK_COLLECTOR_URL: "http://collector:8000"
     networks: [demo]
     security_opt:
       - "no-new-privileges:true"
