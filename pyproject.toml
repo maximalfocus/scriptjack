@@ -3,6 +3,8 @@ name = "scriptjack"
 version = "0.1.0"
 description = "Educational, container-only demonstration of cross-site scripting (XSS / CWE-79) and its context-correct fix."
 readme = "README.md"
+license = "MIT"
+license-files = ["LICENSE"]
 requires-python = ">=3.13"
 dependencies = [
     "fastapi>=0.115",

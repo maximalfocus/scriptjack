@@ -28,6 +28,10 @@ which the server never sees).
 - **[docs/explanation.md](docs/explanation.md)** — cross-site scripting in plain
   language: data-versus-markup context, the XSS / CWE-79 / A03 terminology, the layered
   lesson, and the contained-browser-execution safety boundary.
+- **[SECURITY.md](SECURITY.md)** — which flaws here are deliberate (most of them) and how
+  to privately report one that is not.
+- **[CONTRIBUTING.md](CONTRIBUTING.md)** — the Docker-only workflow, the verification
+  gate, and the containment invariants a change must not break.
 
 ## Requirements
 
@@ -99,3 +103,20 @@ under five minutes once images are built.
 - The secure application is the default. Nothing unsafe starts with
   `docker compose up`.
 - Ports are loopback-only; there is no cloud or hosted deployment.
+- The vulnerable application's cross-site-scripting flaws are **intentional** and are the
+  subject being taught — see [SECURITY.md](SECURITY.md) before reporting one.
+- Injected script runs only in the demo's own origin, in a headless browser the demo
+  drives, on a container network with no egress, from checked-in payload fixtures. See
+  [the contained-browser-execution boundary](docs/explanation.md#the-contained-browser-execution-boundary).
+
+## No warranty, no service
+
+This is a personal educational project, offered as-is. It makes **no** service-level,
+support-duration, compatibility, or production-readiness promise, and it operates no
+hosted service, public endpoint, or published package or image. Nothing here is intended
+or suitable for production use, and none of it should be pointed at a system you do not
+own.
+
+## License
+
+[MIT](LICENSE) — Copyright (c) 2026 maximalfocus.

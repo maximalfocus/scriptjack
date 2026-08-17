@@ -19,7 +19,7 @@ RUN uv sync --frozen --no-dev --no-install-project
 
 # ---- runtime image: the secure application, running as a non-root user ----
 FROM runtime-deps AS runtime
-COPY README.md ./
+COPY README.md LICENSE ./
 COPY src ./src
 RUN uv sync --frozen --no-dev
 RUN useradd --create-home --uid 10001 appuser \
@@ -32,7 +32,7 @@ CMD ["uvicorn", "scriptjack.secure.app:app", "--host", "0.0.0.0", "--port", "800
 FROM base AS dev
 COPY pyproject.toml uv.lock ./
 RUN uv sync --frozen --no-install-project
-COPY README.md ./
+COPY README.md LICENSE ./
 COPY src ./src
 COPY tests ./tests
 RUN uv sync --frozen
@@ -45,7 +45,7 @@ COPY pyproject.toml uv.lock ./
 RUN uv sync --frozen --no-install-project --group browser
 # Download Chromium and its OS dependencies into a fixed, user-independent path.
 RUN playwright install --with-deps chromium
-COPY README.md ./
+COPY README.md LICENSE ./
 COPY src ./src
 COPY browser_tests ./browser_tests
 RUN uv sync --frozen --group browser
