@@ -9,10 +9,25 @@ browser, and how keeping data in a data context at every sink prevents it.
 > own machine over loopback, against wholly fictional fixture data. It ships no
 > exploit against any real system and must not be deployed.
 
-This repository is being built slice by slice. Today it contains the secure
-application's container/CI foundation and demo authentication; the vulnerable
-contrast, the in-network collector, the headless-browser harness, and the
-comparison CLI arrive in later slices.
+It presents the vulnerable behaviour and its fix side by side, proving the same flaw
+through three delivery shapes — **stored**, **reflected**, and **DOM-based** — plus a
+half-fixed variant whose hand-rolled blocklist is defeated without any `<script>` tag,
+so the lesson lands on the *class* of mistake: data crossing into a markup or script
+context. The primary fix is **context-correct output at every sink**; an allowlist
+sanitizer and a nonce-based CSP are defence in depth, not the fix.
+
+Two things people get wrong, demonstrated here: **`HttpOnly` cookies do not stop the
+takeover** (the browser attaches the cookie to the script's own request), and **fixing
+the server templates does not fix the DOM sink** (its payload rides in the URL fragment,
+which the server never sees).
+
+## Documentation
+
+- **[docs/walkthrough.md](docs/walkthrough.md)** — the guided walkthrough, the one-shot
+  command and its expected output, manual exploration, and the tests.
+- **[docs/explanation.md](docs/explanation.md)** — cross-site scripting in plain
+  language: data-versus-markup context, the XSS / CWE-79 / A03 terminology, the layered
+  lesson, and the contained-browser-execution safety boundary.
 
 ## Requirements
 
