@@ -27,6 +27,8 @@ from starlette.datastructures import FormData
 from scriptjack.common import sessions, tokens
 from scriptjack.common.config import DemoUser, Settings, load_settings
 from scriptjack.common.fixtures import ORGANIZATION, VendorStore
+from scriptjack.common.security import SecurityContextMiddleware
+from scriptjack.vulnerable.blocklist import naive_blocklist
 
 _SECURE_ROOT = Path(__file__).resolve().parent.parent / "secure"
 _HERE = Path(__file__).resolve().parent
@@ -55,6 +57,11 @@ def create_app(settings: Settings | None = None, store: VendorStore | None = Non
     _require_opt_in()
     resolved = settings or load_settings()
     vendors = store or VendorStore()
+    # Two further-opt-in demonstration modes (each a distinct Compose service):
+    #  - half-fixed: run the naive blocklist over the stored capability (FR-007);
+    #  - csp: serve the nonce CSP over the still-vulnerable sink (FR-010 demo).
+    half_fixed = os.environ.get("SCRIPTJACK_HALF_FIXED") == "true"
+    csp_enabled = os.environ.get("SCRIPTJACK_CSP") == "true"
 
     app = FastAPI(
         title="scriptjack VULNERABLE portal",
@@ -62,7 +69,10 @@ def create_app(settings: Settings | None = None, store: VendorStore | None = Non
         redoc_url=None,
         openapi_url=None,
     )
-    # No SecurityContextMiddleware: this app serves no CSP on purpose.
+    # CSP is served ONLY in the CSP-alone demonstration; the plain vulnerable app
+    # serves no CSP on purpose so injected script executes.
+    if csp_enabled:
+        app.add_middleware(SecurityContextMiddleware)
     app.mount("/static", StaticFiles(directory=str(_STATIC_DIR)), name="static")
     # The vulnerable DOM-sink script (innerHTML) lives in the vulnerable app's own
     # static path so the unsafe contrast is readable in served source.
@@ -72,8 +82,9 @@ def create_app(settings: Settings | None = None, store: VendorStore | None = Non
         return sessions.read_session(request, resolved)
 
     def render(request: Request, name: str, status_code: int = 200, **context: object) -> Response:
-        # nonce is empty: there is no CSP, so nothing enforces it.
-        base: dict[str, object] = {"org": ORGANIZATION, "nonce": "", "vulnerable": True}
+        # A real nonce only exists in CSP mode; otherwise it is empty and unenforced.
+        nonce = request.state.csp_nonce if csp_enabled else ""
+        base: dict[str, object] = {"org": ORGANIZATION, "nonce": nonce, "vulnerable": True}
         current = user_of(request)
         if current is not None:
             base["current_user"] = current
@@ -203,13 +214,11 @@ def create_app(settings: Settings | None = None, store: VendorStore | None = Non
         if vendor is None:
             raise HTTPException(status_code=404, detail="No vendor profile")
         form = await request.form()
-        # VULNERABLE: the capability statement is stored RAW — no sanitizer, no
-        # audit event. It is later rendered as markup at the stored sink.
-        vendors.set_profile(
-            vendor.id,
-            _form_str(form, "operating_note"),
-            _form_str(form, "capability_statement"),
-        )
+        raw_capability = _form_str(form, "capability_statement")
+        # VULNERABLE: stored without the allowlist sanitizer. Half-fixed mode runs
+        # the naive blocklist first — which is not a fix — otherwise it is raw.
+        stored_capability = naive_blocklist(raw_capability) if half_fixed else raw_capability
+        vendors.set_profile(vendor.id, _form_str(form, "operating_note"), stored_capability)
         return RedirectResponse(f"/vendors/{vendor.id}", status_code=303)
 
     return app

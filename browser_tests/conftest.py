@@ -24,6 +24,8 @@ from scriptjack.common.payloads import SENTINEL_GLOBAL
 BASE_URL = os.environ.get("SCRIPTJACK_BASE_URL", "http://secure-app:8000")
 VULN_BASE_URL = os.environ.get("SCRIPTJACK_VULN_BASE_URL", "http://vulnerable-app:8000")
 COLLECTOR_URL = os.environ.get("SCRIPTJACK_COLLECTOR_URL", "http://collector:8000")
+HALF_FIXED_BASE_URL = os.environ.get("SCRIPTJACK_HALF_FIXED_BASE_URL", "http://half-fixed-app:8000")
+CSP_BASE_URL = os.environ.get("SCRIPTJACK_CSP_BASE_URL", "http://csp-vuln-app:8000")
 
 
 def collector_beacons() -> dict[str, Any]:
@@ -156,3 +158,13 @@ def portal(browser: Browser) -> Iterator[Portal]:
 @pytest.fixture
 def vuln_portal(browser: Browser) -> Iterator[Portal]:
     yield from _make_portal(browser, VULN_BASE_URL)
+
+
+@pytest.fixture
+def half_fixed_portal(browser: Browser) -> Iterator[Portal]:
+    yield from _make_portal(browser, HALF_FIXED_BASE_URL)
+
+
+@pytest.fixture
+def csp_portal(browser: Browser) -> Iterator[Portal]:
+    yield from _make_portal(browser, CSP_BASE_URL)

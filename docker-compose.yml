@@ -97,6 +97,74 @@ services:
       start_period: 5s
     restart: "no"
 
+  # Half-fixed variant: the vulnerable app with the naive blocklist enabled — a
+  # further explicit selection beyond the vulnerable app (FR-007 / FR-016).
+  half-fixed-app:
+    build:
+      context: .
+      target: runtime
+    image: scriptjack-secure:local
+    profiles: ["vulnerable"]
+    command:
+      ["uvicorn", "scriptjack.vulnerable.app:app", "--host", "0.0.0.0", "--port", "8000"]
+    environment:
+      ALLOW_VULNERABLE_DEMO: "${ALLOW_VULNERABLE_DEMO:-}"
+      SCRIPTJACK_HALF_FIXED: "true"
+    networks: [demo, hostpub]
+    ports:
+      - "127.0.0.1:8003:8000" # loopback only
+    read_only: true
+    tmpfs:
+      - /tmp
+    cap_drop: ["ALL"]
+    security_opt:
+      - "no-new-privileges:true"
+    healthcheck:
+      test:
+        - CMD
+        - python
+        - -c
+        - "import urllib.request,sys; sys.exit(0 if urllib.request.urlopen('http://127.0.0.1:8000/healthz').status==200 else 1)"
+      interval: 5s
+      timeout: 3s
+      retries: 12
+      start_period: 5s
+    restart: "no"
+
+  # CSP-alone demonstration: the still-vulnerable stored sink WITH the nonce CSP,
+  # so the payload is injected but blocked from executing (FR-010 demonstration).
+  csp-vuln-app:
+    build:
+      context: .
+      target: runtime
+    image: scriptjack-secure:local
+    profiles: ["vulnerable"]
+    command:
+      ["uvicorn", "scriptjack.vulnerable.app:app", "--host", "0.0.0.0", "--port", "8000"]
+    environment:
+      ALLOW_VULNERABLE_DEMO: "${ALLOW_VULNERABLE_DEMO:-}"
+      SCRIPTJACK_CSP: "true"
+    networks: [demo, hostpub]
+    ports:
+      - "127.0.0.1:8004:8000" # loopback only
+    read_only: true
+    tmpfs:
+      - /tmp
+    cap_drop: ["ALL"]
+    security_opt:
+      - "no-new-privileges:true"
+    healthcheck:
+      test:
+        - CMD
+        - python
+        - -c
+        - "import urllib.request,sys; sys.exit(0 if urllib.request.urlopen('http://127.0.0.1:8000/healthz').status==200 else 1)"
+      interval: 5s
+      timeout: 3s
+      retries: 12
+      start_period: 5s
+    restart: "no"
+
   verify:
     build:
       context: .
@@ -125,10 +193,16 @@ services:
         condition: service_healthy
       collector:
         condition: service_healthy
+      half-fixed-app:
+        condition: service_healthy
+      csp-vuln-app:
+        condition: service_healthy
     environment:
       SCRIPTJACK_BASE_URL: "http://secure-app:8000"
       SCRIPTJACK_VULN_BASE_URL: "http://vulnerable-app:8000"
       SCRIPTJACK_COLLECTOR_URL: "http://collector:8000"
+      SCRIPTJACK_HALF_FIXED_BASE_URL: "http://half-fixed-app:8000"
+      SCRIPTJACK_CSP_BASE_URL: "http://csp-vuln-app:8000"
     networks: [demo]
     security_opt:
       - "no-new-privileges:true"
