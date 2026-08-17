@@ -717,6 +717,7 @@ browser = [
 dev = [
     { name = "httpx" },
     { name = "mypy" },
+    { name = "playwright" },
     { name = "pytest" },
     { name = "ruff" },
 ]
@@ -739,6 +740,7 @@ browser = [
 dev = [
     { name = "httpx", specifier = ">=0.27" },
     { name = "mypy", specifier = ">=1.13" },
+    { name = "playwright", specifier = ">=1.47" },
     { name = "pytest", specifier = ">=8.3" },
     { name = "ruff", specifier = ">=0.8" },
 ]

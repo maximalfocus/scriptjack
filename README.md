@@ -62,6 +62,22 @@ The vulnerable app **will not start** without both enabling its `vulnerable`
 profile and setting `ALLOW_VULNERABLE_DEMO=true`. Nothing unsafe starts with a
 plain `docker compose up`.
 
+## Run the comparison CLI
+
+The comparison CLI drives every payload shape against both applications through the
+real browser and prints a short narrative, a before/after comparison table, and a
+vulnerable/secure verdict:
+
+```sh
+docker compose down -v
+ALLOW_VULNERABLE_DEMO=true \
+  docker compose --profile harness --profile vulnerable \
+  run --build --rm harness python -m scriptjack.cli compare
+```
+
+Add `--verbose` for the HTTP/console/CSP detail. The full contrast completes in well
+under five minutes once images are built.
+
 ## Scope and safety
 
 - All users, credentials, and data are conspicuously fictional demo values.

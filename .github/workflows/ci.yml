@@ -21,3 +21,9 @@ jobs:
         run: >-
           docker compose --profile harness --profile vulnerable
           run --build --rm harness
+      - name: Comparison CLI — full three-axis contrast
+        env:
+          ALLOW_VULNERABLE_DEMO: "true"
+        run: >-
+          docker compose --profile harness --profile vulnerable
+          run --rm harness python -m scriptjack.cli compare
