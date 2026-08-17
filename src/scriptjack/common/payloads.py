@@ -76,3 +76,25 @@ CHAIN_PAYLOAD = Payload(
         '">'
     ),
 )
+
+
+# Half-fixed variant fixtures (SLICE-003b): the literal <script> is stripped by the
+# naive blocklist and does not execute; the other three each bypass it and execute.
+HALF_FIXED_STRIPPED = Payload(
+    key="half-stripped",
+    marker="half-stripped",
+    html=_script("half-stripped"),
+)
+HALF_FIXED_BYPASSES: tuple[Payload, ...] = (
+    Payload("half-img", "half-img", _img("half-img")),
+    Payload("half-svg", "half-svg", _svg("half-svg")),
+    Payload(
+        "half-nested",
+        "half-nested",
+        f"<scr<script>ipt>window.{SENTINEL_GLOBAL}='half-nested'</scr<script>ipt>",
+    ),
+)
+
+# CSP-alone demonstration (SLICE-003b): injected into a still-vulnerable sink but
+# blocked from executing by the nonce CSP with no unsafe-inline.
+CSP_DEMO_PAYLOAD = Payload("csp-demo", "csp-demo", _img("csp-demo"))
